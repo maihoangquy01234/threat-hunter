@@ -1,0 +1,105 @@
+﻿======================================================================
+  THREAT HUNTER v4 - HƯỚNG DẪN SỬ DỤNG BỘ KIT
+  Công cụ giám sát kết nối độc hại (USB Threat Hunter)
+  Phòng An toàn thông tin - Trung tâm CĐS & CNCL Đà Nẵng
+======================================================================
+
+BỘ KIT NÀY DÙNG CHO MÁY NÀO?
+  - Thư mục Win7_x64 / Win10-11_x64 : máy Windows 64-bit (Win 7/10/11)
+  - Thư mục Win7_x86                : máy Windows 32-bit (Win7 đời cũ)
+  - Thư mục Linux_amd64             : máy Linux 64-bit phổ thông
+  - Thư mục Linux_arm64             : máy Linux ARM (Raspberry Pi...)
+  Kiểm tra máy 32 hay 64-bit (Windows): Control Panel > System.
+
+CÁC FILE TRONG BỘ KIT
+  - Updater   : cập nhật dữ liệu IP độc hại + hash mã độc
+  - NetHunter : chương trình giám sát chính
+  - Launcher  : menu điều phối (Windows: Launcher_v2.bat,
+                Linux: launcher.sh) - chạy file này là dễ nhất
+  - whitelist.txt : danh sách IP an toàn (không cảnh báo)
+  - HUONG_DAN_SU_DUNG.txt : file này
+  Sau khi chạy Updater, thư mục sẽ có thêm: threats.bin (IP độc hại),
+  hashes.bin (hash mã độc), các file *_backup.bin (bản sao lưu cũ) và
+  file báo cáo Report_<tên máy>_<giờ>.csv sau mỗi phiên có phát hiện.
+
+----------------------------------------------------------------------
+BƯỚC 1 - CẬP NHẬT DỮ LIỆU (trên máy CÓ Internet; làm tại Phòng trước
+         khi mang USB đi, hoặc tại đơn vị nếu có mạng)
+----------------------------------------------------------------------
+  1. Mở thư mục bộ kit đúng với loại máy sẽ quét.
+  2. Chạy Updater (Windows: nhấp đúp Updater.exe; Linux: ./Updater).
+  3. Chờ đến khi màn hình báo tổng số IP và hash đã tải. Nếu báo lỗi
+     mạng thì kiểm tra kết nối và chạy lại - Updater không bao giờ
+     ghi đè bằng dữ liệu rỗng/hỏng (nó giữ nguyên bản cũ).
+  Tuỳ chọn nâng cao:
+  - Muốn nhận thêm 100 mẫu mã độc mới nhất từ MalwareBazaar: đăng ký
+    Auth-Key miễn phí tại auth.abuse.ch, lưu khoá vào file authkey.txt
+    đặt cạnh Updater rồi chạy lại Updater.
+  - Muốn bổ sung hash của đơn vị (xuất từ MISP/CERT...): thả các file
+    .txt/.csv chứa hash SHA-256 vào thư mục con hashfeeds/ cạnh
+    Updater rồi chạy lại.
+
+----------------------------------------------------------------------
+BƯỚC 2 - GIÁM SÁT TẠI MÁY CẦN KIỂM TRA (không cần Internet)
+----------------------------------------------------------------------
+  Cách 1 (khuyên dùng): chạy Launcher bằng quyền quản trị
+    - Windows: nhấp phải Launcher_v2.bat > Run as administrator, chọn
+      thời lượng quét trong menu (10 phút / 30 phút / 1 giờ / tuỳ chỉnh).
+    - Linux: mở Terminal, chạy: sudo ./launcher.sh rồi chọn trong menu.
+  Cách 2 (chạy trực tiếp NetHunter từ dòng lệnh):
+    - Windows (CMD quyền Admin):  NetHunter.exe -t 30m
+    - Linux (Terminal):           sudo ./NetHunter -t 30m
+    Tham số: -t là thời lượng (VD: 10s, 10m, 1h); -i là chu kỳ quét
+    (mặc định 200ms). MẸO CHO MÁY YẾU: tăng chu kỳ quét để giảm tải cho
+    máy, VD: NetHunter.exe -t 30m -i 1s (quét mỗi 1 giây thay vì 200ms;
+    phát hiện chậm hơn tối đa 1 giây nhưng máy nhẹ hơn hẳn). Giá trị -i
+    phải kèm đơn vị ms hoặc s: ghi -i 1s hoặc -i 1000ms (KHÔNG ghi -i 1000).
+    Menu của Launcher dùng chu kỳ mặc định; muốn chỉnh -i thì chạy trực
+    tiếp NetHunter bằng dòng lệnh như Cách 2 ở trên.
+  Trong lúc quét: giữ nguyên trạng máy, không tắt cửa sổ chương trình.
+  Muốn dừng sớm: nhấn Ctrl+C - chương trình vẫn tổng kết và giữ nguyên
+  báo cáo đã ghi.
+  LƯU Ý QUYỀN: chạy không đủ quyền (không Admin/sudo) thì công cụ không
+  đọc được hết tiến trình của người dùng khác - kết quả sẽ không đầy đủ.
+
+----------------------------------------------------------------------
+BƯỚC 3 - ĐỌC KẾT QUẢ
+----------------------------------------------------------------------
+  - Màn hình hiện [!!!] PHÁT HIỆN KẾT NỐI MÃ ĐỘC: xem ngay các dòng tiến
+    trình, đường dẫn file, IP đích và phần HƯỚNG DẪN XỬ LÝ ngay dưới
+    cảnh báo (chương trình đã phân loại sẵn mức độ rủi ro).
+  - Khối SOI MODULE & CHỮ KÝ SỐ (v4): liệt kê các DLL/module đáng ngờ
+    trong tiến trình đó kèm lý do (trùng hash mã độc đã biết, file nằm ở
+    thư mục tạm, trùng tên DLL hệ thống nhưng nằm ngoài C:\Windows,
+    không có chữ ký số...). File nào bị liệt kê ở đây là đối tượng cần
+    xử lý ưu tiên.
+  - File báo cáo Report_<tên máy>_<ngày>_<giờ>.csv: bằng chứng đầy đủ
+    19 cột (thời gian, máy, MAC, tiến trình cha, SHA-256 file, module
+    đáng ngờ...) - sao chép về hồ sơ vụ việc sau mỗi phiên.
+  - Nếu màn hình báo 'An toàn. Không phát hiện kết nối đáng ngờ': máy
+    sạch trong phiên giám sát đó.
+
+----------------------------------------------------------------------
+AN TOÀN KHI XỬ LÝ (đọc trước khi làm theo hướng dẫn trên màn hình)
+----------------------------------------------------------------------
+  - TUYỆT ĐỐI không tắt các tiến trình hệ thống lõi (System, PID <= 4,
+    svchost, lsass trên Windows; systemd/PID 1, kernel thread trên
+    Linux) - có thể gây sập hệ điều hành. Với nhóm này chỉ NGẮT MẠNG
+    (rút cáp/ngắt WiFi) và báo về Phòng ATTT xử lý tiếp.
+  - Chỉ tắt tiến trình khi màn hình ghi rõ [CÓ THỂ TẮT] kèm lệnh có sẵn
+    (taskkill /F /PID ... trên Windows, kill -9 ... trên Linux) và thực
+    hiện từ cửa sổ Admin/sudo riêng.
+  - Giữ nguyên file báo cáo CSV và ghi lại địa chỉ IP đích, đường dẫn
+    file đáng ngờ để phục vụ điều tra mở rộng.
+
+SỰ CỐ THƯỜNG GẶP
+  - 'threats.bin rỗng/không hợp lệ': chưa chạy Updater, hoặc đang chạy
+    NetHunter ở thư mục khác. Chương trình chỉ đọc dữ liệu NGAY TRONG
+    THƯ MỤC CHỨA NÓ - hãy chạy từ đúng thư mục bộ kit.
+  - Linux báo 'Permission denied': cấp quyền chạy trước:
+    chmod +x NetHunter Updater launcher.sh
+  - Máy Win7 32-bit không chạy được bản x64: dùng thư mục Win7_x86.
+  - Không thấy cảnh báo dù nghi ngờ: tăng thời lượng quét (-t 1h) và
+    đảm bảo máy đang kết nối mạng trong lúc quét.
+
+======================================================================
